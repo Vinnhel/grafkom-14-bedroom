@@ -12,7 +12,7 @@ from utils import (draw_box, draw_cylinder, draw_cone,
 def draw_reading_sofa():
     # Sofa dirotasi: sandaran menghadap ke kanan (+X),
     # dudukan menghadap ke kiri (-X) → orang duduk melihat kasur
-    sox  =  1.80   # center X (lebih ke kanan)
+    sox  =  1.20   # center X (lebih dekat ke kasur di x=-1.65)
     soz  =  1.10   # center Z (maju ke arah meja)
 
     C_FRAME  = (0.40, 0.28, 0.14)

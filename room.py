@@ -64,84 +64,42 @@ def get_sky_colors(hour):
 
 
 # ═══════════════════════════════════════════════════════
-#  SKY — digambar PERTAMA (sebelum dinding) via 2D overlay
+#  SKY — digambar PERTAMA (sebelum dinding) di world-space 3D
 # ═══════════════════════════════════════════════════════
 def draw_sky_background(hour, viewport_w, viewport_h):
     """
-    Menggambar langit sebagai quad 2D fullscreen di depan semua,
-    lalu akan ditimpa dinding kecuali area jendela.
-    HARUS dipanggil sebelum draw_room() dan draw_window_frame().
-    
-    Strategi: switch ke ortho 2D, gambar langit hanya di area piksel
-    yang sesuai dengan bukaan jendela dalam screen-space.
-    Untuk pendekatan lebih robust: gambar ke stencil buffer.
+    Menggambar langit sebagai quad world-space 3D di z=-3.08
+    (di belakang dinding z=-3.00).  draw_room() membuat lubang
+    jendela sehingga sky terlihat tepat di area jendela.
     """
-    # Pendekatan stencil:
-    # 1. Tulis 1 ke stencil di area jendela (proyeksi kamera saat ini)
-    # 2. Gambar langit fullscreen hanya di area stencil == 1
-
     t = time.time()
     sky_top, sky_bot, sun_col, sun_vis, moon_vis = get_sky_colors(hour)
 
-    # Dimensi jendela dalam world-space
+    # Area sky sedikit lebih besar dari bukaan jendela
     wx, wy = 0.30, 0.95
     ww, wh = 2.60, 2.30
-    x_left  = wx - ww/2 - 0.02
-    x_right = wx + ww/2 + 0.02
-    y_bot   = wy + 0.04
-    y_top   = wy + wh - 0.03
-    z_win   = -2.95   # tepat di muka dinding (z=-3.00)
+    x_left  = wx - ww/2 - 0.15
+    x_right = wx + ww/2 + 0.15
+    y_bot   = wy - 0.10
+    y_top   = wy + wh + 0.15
+    z_sky   = -3.08   # di belakang dinding (z=-3.00 s/d -2.975)
 
-    # ── STENCIL PASS: tulis area jendela ke stencil ──
-    glEnable(GL_STENCIL_TEST)
-    glClear(GL_STENCIL_BUFFER_BIT)
-    glStencilFunc(GL_ALWAYS, 1, 0xFF)
-    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE)
-    glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE)
-    glDepthMask(GL_FALSE)
     glDisable(GL_LIGHTING)
+    glDisable(GL_STENCIL_TEST)
+    glDepthMask(GL_TRUE)
+    glEnable(GL_DEPTH_TEST)
 
-    # Gambar quad area jendela sebagai stencil mask
+    # Gambar sky gradient langsung di world-space
     glBegin(GL_QUADS)
-    glVertex3f(x_left,  y_bot, z_win)
-    glVertex3f(x_right, y_bot, z_win)
-    glVertex3f(x_right, y_top, z_win)
-    glVertex3f(x_left,  y_top, z_win)
-    glEnd()
-
-    # ── SKY PASS: gambar langit hanya di area stencil == 1 ──
-    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE)
-    glStencilFunc(GL_EQUAL, 1, 0xFF)
-    glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP)
-
-    # Switch ke ortho 2D untuk gambar sky fullscreen
-    glMatrixMode(GL_PROJECTION)
-    glPushMatrix()
-    glLoadIdentity()
-    glOrtho(0, viewport_w, 0, viewport_h, -1, 1)
-    glMatrixMode(GL_MODELVIEW)
-    glPushMatrix()
-    glLoadIdentity()
-
-    glDisable(GL_DEPTH_TEST)
-    glDisable(GL_LIGHTING)
-
-    # Gambar sky gradient fullscreen
-    W = float(viewport_w); H = float(viewport_h)
-    glBegin(GL_QUADS)
-    glColor3f(*sky_top)
-    glVertex2f(0, H); glVertex2f(W, H)
     glColor3f(*sky_bot)
-    glVertex2f(W, 0); glVertex2f(0, 0)
+    glVertex3f(x_left,  y_bot, z_sky)
+    glVertex3f(x_right, y_bot, z_sky)
+    glColor3f(*sky_top)
+    glVertex3f(x_right, y_top, z_sky)
+    glVertex3f(x_left,  y_top, z_sky)
     glEnd()
-
-    glMatrixMode(GL_PROJECTION)
-    glPopMatrix()
-    glMatrixMode(GL_MODELVIEW)
-    glPopMatrix()
 
     # ── Gambar matahari / bulan / bintang di world-space ──
-    # Masih pakai stencil == 1 (area jendela)
     glDepthMask(GL_FALSE)
 
     if sun_vis > 0.01:
@@ -152,26 +110,26 @@ def draw_sky_background(hour, viewport_w, viewport_h):
         sr, sg, sb = sun_col
         glColor3f(sr, sg, sb)
         glBegin(GL_TRIANGLE_FAN)
-        glVertex3f(sun_x, sun_y, z_win + 0.01)
+        glVertex3f(sun_x, sun_y, z_sky + 0.02)
         for i in range(33):
             a = math.radians(i * 11.25)
-            glVertex3f(sun_x + math.cos(a)*sun_r, sun_y + math.sin(a)*sun_r, z_win + 0.01)
+            glVertex3f(sun_x + math.cos(a)*sun_r, sun_y + math.sin(a)*sun_r, z_sky + 0.02)
         glEnd()
         glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         glColor4f(sr, sg*0.85, sb*0.5, 0.28*sun_vis)
         glBegin(GL_TRIANGLE_FAN)
-        glVertex3f(sun_x, sun_y, z_win + 0.008)
+        glVertex3f(sun_x, sun_y, z_sky + 0.018)
         for i in range(33):
             a = math.radians(i * 11.25)
-            glVertex3f(sun_x + math.cos(a)*sun_r*2.4, sun_y + math.sin(a)*sun_r*2.4, z_win + 0.008)
+            glVertex3f(sun_x + math.cos(a)*sun_r*2.4, sun_y + math.sin(a)*sun_r*2.4, z_sky + 0.018)
         glEnd()
         glColor4f(sr, sg*0.7, sb*0.3, 0.10*sun_vis)
         glBegin(GL_TRIANGLE_FAN)
-        glVertex3f(sun_x, sun_y, z_win + 0.006)
+        glVertex3f(sun_x, sun_y, z_sky + 0.016)
         for i in range(33):
             a = math.radians(i * 11.25)
-            glVertex3f(sun_x + math.cos(a)*sun_r*4.5, sun_y + math.sin(a)*sun_r*4.5, z_win + 0.006)
+            glVertex3f(sun_x + math.cos(a)*sun_r*4.5, sun_y + math.sin(a)*sun_r*4.5, z_sky + 0.016)
         glEnd()
         glDisable(GL_BLEND)
 
@@ -183,10 +141,10 @@ def draw_sky_background(hour, viewport_w, viewport_h):
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         glColor4f(0.92, 0.92, 0.82, moon_vis)
         glBegin(GL_TRIANGLE_FAN)
-        glVertex3f(moon_x, moon_y, z_win + 0.01)
+        glVertex3f(moon_x, moon_y, z_sky + 0.02)
         for i in range(33):
             a = math.radians(i * 11.25)
-            glVertex3f(moon_x + math.cos(a)*moon_r, moon_y + math.sin(a)*moon_r, z_win + 0.01)
+            glVertex3f(moon_x + math.cos(a)*moon_r, moon_y + math.sin(a)*moon_r, z_sky + 0.02)
         glEnd()
         import random
         rng = random.Random(42)
@@ -197,10 +155,10 @@ def draw_sky_background(hour, viewport_w, viewport_h):
             twinkle = 0.5 + 0.5*math.sin(t * rng.uniform(0.8,2.2) + rng.uniform(0,6))
             glColor4f(0.95, 0.95, 1.0, moon_vis * twinkle * 0.9)
             glBegin(GL_TRIANGLE_FAN)
-            glVertex3f(sx2, sy2, z_win + 0.009)
+            glVertex3f(sx2, sy2, z_sky + 0.019)
             for i in range(7):
                 a = math.radians(i * 60)
-                glVertex3f(sx2 + math.cos(a)*sr2, sy2 + math.sin(a)*sr2, z_win + 0.009)
+                glVertex3f(sx2 + math.cos(a)*sr2, sy2 + math.sin(a)*sr2, z_sky + 0.019)
             glEnd()
         glDisable(GL_BLEND)
 
@@ -209,10 +167,10 @@ def draw_sky_background(hour, viewport_w, viewport_h):
     if 7.0 < hour < 18.0:
         cloud_vis = min(smooth_step(7.0,9.0,hour), smooth_step(18.0,16.0,hour))
     if cloud_vis > 0.01:
-        _draw_cloud(wx - 0.50, wy + wh*0.65, t, z_win, scale=1.0,  alpha=cloud_vis)
-        _draw_cloud(wx + 0.60, wy + wh*0.52, t, z_win, scale=0.65, alpha=cloud_vis*0.8)
+        _draw_cloud(wx - 0.50, wy + wh*0.65, t, z_sky, scale=1.0,  alpha=cloud_vis)
+        _draw_cloud(wx + 0.60, wy + wh*0.52, t, z_sky, scale=0.65, alpha=cloud_vis*0.8)
         if hour < 17.0:
-            _draw_cloud(wx - 0.90, wy + wh*0.38, t, z_win, scale=0.48, alpha=cloud_vis*0.55)
+            _draw_cloud(wx - 0.90, wy + wh*0.38, t, z_sky, scale=0.48, alpha=cloud_vis*0.55)
 
     # Reset stencil & depth
     glDepthMask(GL_TRUE)
@@ -250,8 +208,23 @@ def draw_room():
     draw_box( 0.00, 0.02, -2.98, 6.0, 0.12, 0.04, 0.40, 0.28, 0.13)
     draw_box(-2.98, 0.02,  0.00, 0.04, 0.12, 6.0, 0.40, 0.28, 0.13)
     draw_box( 2.98, 0.02,  0.00, 0.04, 0.12, 6.0, 0.40, 0.28, 0.13)
+    # Dinding belakang — 4 panel dengan lubang jendela
+    # Jendela: wx=0.30, wy=0.95, ww=2.60, wh=2.30 (+ bingkai 0.11)
+    _WX, _WY, _WW, _WH = 0.30, 0.95, 2.60, 2.30
+    _win_xl = _WX - _WW/2 - 0.11   # -1.01
+    _win_xr = _WX + _WW/2 + 0.11   #  1.61
+    _win_yb = _WY - 0.01            #  0.94
+    _win_yt = _WY + _WH + 0.01     #  3.26
+    _pw_left = _win_xl - (-3.00)
+    _px_left = (-3.00 + _win_xl) / 2.0
     mat_wall(0.88, 0.84, 0.76)
-    draw_box(0, 0, -3.00, 6.0, 4.0, 0.05, 0.88, 0.84, 0.76)
+    draw_box(_px_left, 0, -3.00, _pw_left, 4.0, 0.05, 0.88, 0.84, 0.76)
+    _pw_right = 3.00 - _win_xr
+    _px_right = (_win_xr + 3.00) / 2.0
+    draw_box(_px_right, 0, -3.00, _pw_right, 4.0, 0.05, 0.88, 0.84, 0.76)
+    draw_box(_WX, 0, -3.00, _win_xr - _win_xl, _win_yb, 0.05, 0.88, 0.84, 0.76)
+    _ph_top = 4.0 - _win_yt
+    draw_box(_WX, _win_yt, -3.00, _win_xr - _win_xl, _ph_top, 0.05, 0.88, 0.84, 0.76)
     mat_wall(0.85, 0.81, 0.73)
     draw_box(-3.00, 0, 0, 0.05, 4.0, 6.0, 0.85, 0.81, 0.73)
     mat_wall(0.85, 0.81, 0.73)
@@ -262,10 +235,18 @@ def draw_room():
     draw_box( 0.00, 3.94, -2.98, 6.0, 0.10, 0.06, 0.90, 0.87, 0.82)
     draw_box(-2.98, 3.94,  0.00, 0.06, 0.10, 6.0, 0.90, 0.87, 0.82)
     draw_box( 2.98, 3.94,  0.00, 0.06, 0.10, 6.0, 0.90, 0.87, 0.82)
+    # Baseboard bawah jendela — dibagi 2 agar tidak menutupi lubang jendela
+    # Lubang jendela: x = -1.11 s/d 1.71 (dari _win_xl/_win_xr di atas)
     mat_wall(0.82, 0.78, 0.70)
-    draw_box(0, 0.04, -2.97, 5.80, 1.10, 0.03, 0.82, 0.78, 0.70)
+    # Baseboard kiri (x=-3 s/d -1.11)
+    draw_box(-2.055, 0.04, -2.97, 1.89, 1.10, 0.03, 0.82, 0.78, 0.70)
+    # Baseboard kanan (x=1.71 s/d 3.0)
+    draw_box(2.355, 0.04, -2.97, 1.29, 1.10, 0.03, 0.82, 0.78, 0.70)
     mat_wood(0.55, 0.42, 0.24)
-    draw_box(0, 1.14, -2.97, 5.82, 0.04, 0.04, 0.55, 0.42, 0.24)
+    # Rail baseboard kiri
+    draw_box(-2.055, 1.14, -2.97, 1.89, 0.04, 0.04, 0.55, 0.42, 0.24)
+    # Rail baseboard kanan
+    draw_box(2.355, 1.14, -2.97, 1.29, 0.04, 0.04, 0.55, 0.42, 0.24)
 
 
 # ═══════════════════════════════════════════════════════
@@ -276,9 +257,18 @@ def draw_window(hour=12.0):
     wx, wy = 0.30, 0.95
     ww, wh = 2.60, 2.30
 
-    # ══ BINGKAI JENDELA ════════════════════════════════
+    # ══ BINGKAI JENDELA — 4 strip tipis (tidak menutupi kaca) ══
+    FRAME_T = 0.11   # tebal frame kayu
+    FRAME_D = 0.08   # kedalaman frame (Z)
     mat_wood(0.90, 0.87, 0.82)
-    draw_box(wx, wy, -2.96, ww + 0.22, wh + 0.24, 0.08, 0.90, 0.87, 0.82)
+    # Strip bawah
+    draw_box(wx, wy - FRAME_T/2, -2.96, ww + 0.22, FRAME_T, FRAME_D, 0.90, 0.87, 0.82)
+    # Strip atas
+    draw_box(wx, wy + wh + FRAME_T/2, -2.96, ww + 0.22, FRAME_T, FRAME_D, 0.90, 0.87, 0.82)
+    # Strip kiri
+    draw_box(wx - ww/2 - FRAME_T/2 - 0.005, wy + wh/2, -2.96, FRAME_T, wh, FRAME_D, 0.90, 0.87, 0.82)
+    # Strip kanan
+    draw_box(wx + ww/2 + FRAME_T/2 + 0.005, wy + wh/2, -2.96, FRAME_T, wh, FRAME_D, 0.90, 0.87, 0.82)
 
     # ══ KACA — semi-transparan ══════════════════════════
     glDisable(GL_LIGHTING)
