@@ -13,7 +13,7 @@ def draw_reading_sofa():
     # Sofa dirotasi: sandaran menghadap ke kanan (+X),
     # dudukan menghadap ke kiri (-X) → orang duduk melihat kasur
     sox  =  1.80   # center X (lebih ke kanan)
-    soz  =  1.70   # center Z (lebih jauh dari bookshelf)
+    soz  =  1.10   # center Z (maju ke arah meja)
 
     C_FRAME  = (0.40, 0.28, 0.14)
     C_BASE   = (0.52, 0.44, 0.36)

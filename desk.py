@@ -89,28 +89,40 @@ def _draw_desk_pedestal(px, dz, mh):
 
 
 def _draw_laptop(lx, ly, lz):
+    # ── Base / keyboard ──────────────────────────────
     mat_plastic(0.20, 0.20, 0.24)
     draw_box(lx, ly, lz, 0.70, 0.022, 0.46, 0.20, 0.20, 0.24)
+    # Keyboard area (recessed darker)
     set_material(0.14, 0.14, 0.18, amb_scale=0.18,
                  spec=(0.20,0.20,0.22,1.0), shininess=28.0)
     draw_box(lx, ly + 0.014, lz - 0.02, 0.62, 0.010, 0.36, 0.14, 0.14, 0.18)
+    # Touchpad
     set_material(0.24, 0.24, 0.28, amb_scale=0.20,
                  spec=(0.35,0.35,0.38,1.0), shininess=40.0)
     draw_box(lx, ly + 0.018, lz + 0.10, 0.20, 0.008, 0.14, 0.24, 0.24, 0.28)
+
+    # ── Layar — engsel di bagian BELAKANG base ────────
+    # Hinge posisi: ujung belakang base (lz - 0.23), atas base (ly + 0.022)
+    hinge_y = ly + 0.022
+    hinge_z = lz - 0.23
+
     glPushMatrix()
-    glTranslatef(lx, ly + 0.011, lz - 0.23)
-    glRotatef(-118, 1, 0, 0)
-    glTranslatef(0, 0.22, 0)
+    glTranslatef(lx, hinge_y, hinge_z)   # pindah ke hinge
+    glRotatef(-75, 1, 0, 0)               # buka layar ~75° dari posisi tertutup
+    # Sekarang gambar layar: bawah layar di hinge (y=0), layar tegak ke atas
     mat_plastic(0.18, 0.18, 0.22)
-    draw_box(0, 0, 0, 0.70, 0.43, 0.018, 0.18, 0.18, 0.22)
+    draw_box(0, 0.215, 0, 0.70, 0.43, 0.018, 0.18, 0.18, 0.22)
+    # Layar (screen panel)
     set_material(0.08, 0.12, 0.22, amb_scale=0.12,
                  spec=(0.60,0.62,0.68,1.0), shininess=72.0)
-    draw_box(0, 0.01, 0.001, 0.62, 0.37, 0.008, 0.08, 0.12, 0.22)
+    draw_box(0, 0.215, 0.001, 0.62, 0.37, 0.008, 0.08, 0.12, 0.22)
+    # Konten layar (biru/UI)
     set_material(0.20, 0.40, 0.80, amb_scale=0.20,
                  spec=(0.50,0.55,0.65,1.0), shininess=60.0)
-    draw_box(0, 0.01, 0.002, 0.40, 0.20, 0.005, 0.20, 0.40, 0.80)
+    draw_box(0, 0.215, 0.002, 0.40, 0.20, 0.005, 0.20, 0.40, 0.80)
+    # Logo
     mat_metal(0.65, 0.65, 0.68)
-    draw_box(0, 0.01, -0.010, 0.10, 0.10, 0.004, 0.65, 0.65, 0.68)
+    draw_box(0, 0.215, -0.010, 0.10, 0.10, 0.004, 0.65, 0.65, 0.68)
     glPopMatrix()
 
 
