@@ -53,18 +53,19 @@ def draw_window():
     t = time.time()
 
     # ══ LUAR JENDELA — langit & matahari ══════════════
-    # Digambar SEBELUM kaca agar tertutup kaca di atasnya
+    # Digambar dengan depth test dimatikan sementara agar
+    # langit selalu terlihat di belakang kaca, tidak terblock dinding
     glDisable(GL_LIGHTING)
-    glDepthMask(GL_FALSE)   # jangan tulis ke depth, biar kaca menutupi
+    glDisable(GL_DEPTH_TEST)   # bypass depth buffer sepenuhnya
 
     # Langit gradasi (biru cerah atas → putih kekuningan bawah)
     glBegin(GL_QUADS)
     glColor3f(0.42, 0.68, 0.92)   # biru cerah atas
-    glVertex3f(wx - ww/2 - 0.02, wy + wh - 0.06, -2.99)
-    glVertex3f(wx + ww/2 + 0.02, wy + wh - 0.06, -2.99)
+    glVertex3f(wx - ww/2 - 0.02, wy + wh - 0.06, -2.98)
+    glVertex3f(wx + ww/2 + 0.02, wy + wh - 0.06, -2.98)
     glColor3f(0.78, 0.90, 1.00)   # putih kebiruan bawah
-    glVertex3f(wx + ww/2 + 0.02, wy + 0.07, -2.99)
-    glVertex3f(wx - ww/2 - 0.02, wy + 0.07, -2.99)
+    glVertex3f(wx + ww/2 + 0.02, wy + 0.07, -2.98)
+    glVertex3f(wx - ww/2 - 0.02, wy + 0.07, -2.98)
     glEnd()
 
     # Matahari (disc putih kekuningan, posisi dinamis naik-turun pelan)
@@ -72,20 +73,20 @@ def draw_window():
     sun_x = wx + ww * 0.30
     glColor3f(1.0, 0.97, 0.70)
     glBegin(GL_TRIANGLE_FAN)
-    glVertex3f(sun_x, sun_y, -2.985)
+    glVertex3f(sun_x, sun_y, -2.975)
     for i in range(33):
         a = math.radians(i * 11.25)
-        glVertex3f(sun_x + math.cos(a)*0.22, sun_y + math.sin(a)*0.22, -2.985)
+        glVertex3f(sun_x + math.cos(a)*0.22, sun_y + math.sin(a)*0.22, -2.975)
     glEnd()
     # Corona matahari (soft glow)
     glEnable(GL_BLEND)
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
     glColor4f(1.0, 0.95, 0.60, 0.25)
     glBegin(GL_TRIANGLE_FAN)
-    glVertex3f(sun_x, sun_y, -2.984)
+    glVertex3f(sun_x, sun_y, -2.974)
     for i in range(33):
         a = math.radians(i * 11.25)
-        glVertex3f(sun_x + math.cos(a)*0.44, sun_y + math.sin(a)*0.44, -2.984)
+        glVertex3f(sun_x + math.cos(a)*0.44, sun_y + math.sin(a)*0.44, -2.974)
     glEnd()
     glDisable(GL_BLEND)
 
@@ -94,7 +95,7 @@ def draw_window():
     # Awan 2 (lebih kecil)
     _draw_cloud(wx + 0.60, wy + wh * 0.50, t, scale=0.65)
 
-    glDepthMask(GL_TRUE)
+    glEnable(GL_DEPTH_TEST)    # aktifkan kembali depth test
     glEnable(GL_LIGHTING)
 
     # ══ BINGKAI JENDELA ════════════════════════════════
@@ -180,6 +181,7 @@ def draw_window():
 def _draw_cloud(cx, cy, t, scale=1.0):
     """Awan sederhana dari beberapa disc putih semi-transparan."""
     glDisable(GL_LIGHTING)
+    glDisable(GL_DEPTH_TEST)
     glEnable(GL_BLEND)
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
     drift = math.sin(t * 0.025 + cx) * 0.05   # gerak pelan
@@ -200,6 +202,7 @@ def _draw_cloud(cx, cy, t, scale=1.0):
                        cy + (by + math.sin(a)*br) * scale, -2.983)
         glEnd()
     glDisable(GL_BLEND)
+    glEnable(GL_DEPTH_TEST)
     glEnable(GL_LIGHTING)
 
 

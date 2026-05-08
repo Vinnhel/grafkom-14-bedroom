@@ -13,7 +13,7 @@ def draw_reading_sofa():
     # Sofa dirotasi: sandaran menghadap ke kanan (+X),
     # dudukan menghadap ke kiri (-X) → orang duduk melihat kasur
     sox  =  1.80   # center X (lebih ke kanan)
-    soz  =  1.20   # center Z (tengah ruangan)
+    soz  =  1.70   # center Z (lebih jauh dari bookshelf)
 
     C_FRAME  = (0.40, 0.28, 0.14)
     C_BASE   = (0.52, 0.44, 0.36)
@@ -115,27 +115,11 @@ def draw_ceiling_lamp(lamp_on):
     glPushMatrix()
     glTranslatef(lx, 3.18, lz)
 
-    # ── Halo cahaya saat lampuOn (digambar SEBELUM sphere) ──
+    # ── Globe bola lampu — SELALU digambar SOLID dulu ───────────
     if lamp_on:
-        glDisable(GL_LIGHTING)
-        glEnable(GL_BLEND)
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-        glColor4f(1.0, 0.94, 0.70, 0.07)
-        qh = gluNewQuadric()
-        gluSphere(qh, 0.68, 16, 16)
-        gluDeleteQuadric(qh)
-        glColor4f(1.0, 0.95, 0.72, 0.12)
-        qh2 = gluNewQuadric()
-        gluSphere(qh2, 0.52, 16, 16)
-        gluDeleteQuadric(qh2)
+        # Gambar solid dulu ke depth buffer, baru efek glow di atas
+        glDepthMask(GL_TRUE)
         glDisable(GL_BLEND)
-        glEnable(GL_LIGHTING)
-
-    # ── Globe bola lampu — SELALU digambar ───────────
-    # Bedanya: saat ON → emissive/terang, saat OFF → kain putih redup
-    if lamp_on:
-        # Matikan lighting sementara agar warna emissive tidak terpengaruh
-        # shading gelap dari lighting engine
         glDisable(GL_LIGHTING)
         glColor3f(1.0, 0.97, 0.82)
         q = gluNewQuadric()
@@ -146,6 +130,23 @@ def draw_ceiling_lamp(lamp_on):
         q2 = gluNewQuadric()
         gluSphere(q2, 0.08, 12, 12)
         gluDeleteQuadric(q2)
+        glEnable(GL_LIGHTING)
+
+        # ── Halo cahaya (digambar SETELAH globe solid) ──
+        glDisable(GL_LIGHTING)
+        glEnable(GL_BLEND)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        glDepthMask(GL_FALSE)
+        glColor4f(1.0, 0.95, 0.72, 0.12)
+        qh2 = gluNewQuadric()
+        gluSphere(qh2, 0.52, 16, 16)
+        gluDeleteQuadric(qh2)
+        glColor4f(1.0, 0.94, 0.70, 0.07)
+        qh = gluNewQuadric()
+        gluSphere(qh, 0.68, 16, 16)
+        gluDeleteQuadric(qh)
+        glDepthMask(GL_TRUE)
+        glDisable(GL_BLEND)
         glEnable(GL_LIGHTING)
     else:
         # Lampu mati: globe terlihat sebagai objek kain biasa

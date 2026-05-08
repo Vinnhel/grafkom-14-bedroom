@@ -29,14 +29,14 @@ def draw_wardrobe():
     mat_wood(0.36, 0.24, 0.11)
     draw_box(wx, 0.00, wz, wW + 0.04, 0.08, wD + 0.06, 0.36, 0.24, 0.11)
 
-    # ── Mahkota atas — rata dengan puncak badan ───────
-    # Hanya plat tipis, tidak mencuat ke atas
+    # ── Mahkota atas — rata dengan puncak badan, tidak mencuat ───────
+    # Plat tipis tepat di bawah puncak badan
     mat_wood(0.50, 0.36, 0.18)
-    draw_box(wx - 0.01, wH - 0.04, wz, wW + 0.06, 0.08, wD + 0.06,
+    draw_box(wx - 0.01, wH - 0.05, wz, wW + 0.04, 0.05, wD + 0.04,
              0.50, 0.36, 0.18)
-    # Profil gelap tipis (strip depan mahkota)
+    # Profil gelap tipis (strip depan mahkota) — tidak melebihi wH
     mat_wood(0.34, 0.22, 0.10)
-    draw_box(wx - 0.25, wH - 0.06, wz, 0.04, 0.10, wD + 0.04,
+    draw_box(wx - 0.25, wH - 0.06, wz, 0.04, 0.06, wD + 0.02,
              0.34, 0.22, 0.10)
 
     # ── Rel atas (logam, flush dengan muka lemari) ────
