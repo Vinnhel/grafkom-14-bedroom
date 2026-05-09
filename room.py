@@ -238,15 +238,8 @@ def draw_room():
     # Baseboard bawah jendela — dibagi 2 agar tidak menutupi lubang jendela
     # Lubang jendela: x = -1.11 s/d 1.71 (dari _win_xl/_win_xr di atas)
     mat_wall(0.82, 0.78, 0.70)
-    # Baseboard kiri (x=-3 s/d -1.11)
-    draw_box(-2.055, 0.04, -2.97, 1.89, 1.10, 0.03, 0.82, 0.78, 0.70)
-    # Baseboard kanan (x=1.71 s/d 3.0)
-    draw_box(2.355, 0.04, -2.97, 1.29, 1.10, 0.03, 0.82, 0.78, 0.70)
-    mat_wood(0.55, 0.42, 0.24)
-    # Rail baseboard kiri
-    draw_box(-2.055, 1.14, -2.97, 1.89, 0.04, 0.04, 0.55, 0.42, 0.24)
-    # Rail baseboard kanan
-    draw_box(2.355, 1.14, -2.97, 1.29, 0.04, 0.04, 0.55, 0.42, 0.24)
+    draw_box(_px_left,  0.04, -2.97, _pw_left,  1.10, 0.03, 0.82, 0.78, 0.70)
+    draw_box(_px_right, 0.04, -2.97, _pw_right, 1.10, 0.03, 0.82, 0.78, 0.70)
 
 
 # ═══════════════════════════════════════════════════════
@@ -484,7 +477,7 @@ def draw_dust_particles(hour=0.0, lamp_on=False):
     glEnable(GL_BLEND)
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
     glDepthMask(GL_FALSE)
-    glDisable(GL_DEPTH_TEST)
+    glEnable(GL_DEPTH_TEST)
 
     glPointSize(2.5)
     glBegin(GL_POINTS)
@@ -508,7 +501,6 @@ def draw_dust_particles(hour=0.0, lamp_on=False):
         glVertex3f(wx, wy, wz)
 
     glEnd()
-    glEnable(GL_DEPTH_TEST)
     glDepthMask(GL_TRUE)
     glDisable(GL_BLEND)
     glEnable(GL_LIGHTING)
