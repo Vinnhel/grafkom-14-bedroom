@@ -263,12 +263,12 @@ def draw_window(hour=12.0):
     mat_wood(0.90, 0.87, 0.82)
     # Strip bawah
     draw_box(wx, wy - FRAME_T/2, -2.96, ww + 0.22, FRAME_T, FRAME_D, 0.90, 0.87, 0.82)
-    # Strip atas
-    draw_box(wx, wy + wh + FRAME_T/2, -2.96, ww + 0.22, FRAME_T, FRAME_D, 0.90, 0.87, 0.82)
+    # Strip atas (berada di dalam bukaan jendela, top tepat di wy+wh)
+    draw_box(wx, wy + wh - FRAME_T, -2.96, ww + 0.22, FRAME_T, FRAME_D, 0.90, 0.87, 0.82)
     # Strip kiri
-    draw_box(wx - ww/2 - FRAME_T/2 - 0.005, wy + wh/2, -2.96, FRAME_T, wh, FRAME_D, 0.90, 0.87, 0.82)
+    draw_box(wx - ww/2 - FRAME_T/2 - 0.005, wy, -2.96, FRAME_T, wh, FRAME_D, 0.90, 0.87, 0.82)
     # Strip kanan
-    draw_box(wx + ww/2 + FRAME_T/2 + 0.005, wy + wh/2, -2.96, FRAME_T, wh, FRAME_D, 0.90, 0.87, 0.82)
+    draw_box(wx + ww/2 + FRAME_T/2 + 0.005, wy, -2.96, FRAME_T, wh, FRAME_D, 0.90, 0.87, 0.82)
 
     # ══ KACA — semi-transparan ══════════════════════════
     glDisable(GL_LIGHTING)
@@ -318,17 +318,17 @@ def draw_window(hour=12.0):
 
     # ══ TIRAI ══════════════════════════════════════════
     mat_fabric(0.96, 0.92, 0.86)
-    draw_box(wx - ww*0.50 - 0.22, wy + 0.06, -2.90, 0.30, wh + 0.26, 0.10, 0.96, 0.92, 0.86)
+    draw_box(wx - ww*0.50 - 0.22, wy + 0.06, -2.90, 0.30, wh - 0.15, 0.10, 0.96, 0.92, 0.86)
     mat_fabric(0.88, 0.84, 0.78)
     for fold in [-0.01, 0.02, 0.05]:
-        draw_box(wx - ww*0.50 - 0.22, wy + 0.06, -2.90+fold, 0.025, wh+0.26, 0.10, 0.88, 0.84, 0.78)
+        draw_box(wx - ww*0.50 - 0.22, wy + 0.06, -2.90+fold, 0.025, wh - 0.15, 0.10, 0.88, 0.84, 0.78)
     mat_fabric(0.96, 0.92, 0.86)
-    draw_box(wx + ww*0.50 + 0.22, wy + 0.06, -2.90, 0.30, wh + 0.26, 0.10, 0.96, 0.92, 0.86)
+    draw_box(wx + ww*0.50 + 0.22, wy + 0.06, -2.90, 0.30, wh - 0.15, 0.10, 0.96, 0.92, 0.86)
     mat_fabric(0.88, 0.84, 0.78)
     for fold in [-0.01, 0.02, 0.05]:
-        draw_box(wx + ww*0.50 + 0.22, wy + 0.06, -2.90+fold, 0.025, wh+0.26, 0.10, 0.88, 0.84, 0.78)
+        draw_box(wx + ww*0.50 + 0.22, wy + 0.06, -2.90+fold, 0.025, wh - 0.15, 0.10, 0.88, 0.84, 0.78)
     mat_wood(0.72, 0.58, 0.36)
-    draw_box(wx, wy + wh + 0.14, -2.90, ww + 0.90, 0.12, 0.14, 0.72, 0.58, 0.36)
+    draw_box(wx, wy + wh - 0.15, -2.90, ww + 0.90, 0.04, 0.14, 0.72, 0.58, 0.36)
     mat_wood(0.82, 0.76, 0.68)
     draw_box(wx, wy - 0.04, -2.86, ww + 0.46, 0.06, 0.22, 0.82, 0.76, 0.68)
 

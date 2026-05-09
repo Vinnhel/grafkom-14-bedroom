@@ -108,7 +108,7 @@ def _draw_laptop(lx, ly, lz):
 
     glPushMatrix()
     glTranslatef(lx, hinge_y, hinge_z)   # pindah ke hinge
-    glRotatef(100, 1, 0, 0)              # buka layar ~100° ke depan (+Z), sedikit miring ke belakang
+    glRotatef(-10, 1, 0, 0)              # layar tegak ke atas, sedikit miring ke belakang (~10°) seperti laptop nyata
     # Sekarang gambar layar: bawah layar di hinge (y=0), layar tegak ke atas
     mat_plastic(0.18, 0.18, 0.22)
     draw_box(0, 0.215, 0, 0.70, 0.43, 0.018, 0.18, 0.18, 0.22)
