@@ -3,7 +3,7 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 import math, time
 
-from room    import draw_room, draw_window, draw_sky_background, draw_sun_rays
+from room    import draw_room, draw_window, draw_sky_background, draw_sun_rays, draw_moon_rays, draw_dust_particles
 from bed     import draw_bed, draw_nightstand
 from desk    import draw_desk, draw_chair
 from storage import draw_wardrobe, draw_bookshelf
@@ -334,6 +334,10 @@ def main():
 
         # 4. Efek sinar matahari (transparan, paling akhir)
         draw_sun_rays(hour)
+
+        # 4b. Efek cahaya bulan + partikel debu (aktif saat malam + lampu mati)
+        draw_moon_rays(hour, lamp_on)
+        draw_dust_particles(hour, lamp_on)
 
         # 5. HUD overlay
         draw_hud(hour, viewport_w, viewport_h)

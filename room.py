@@ -3,7 +3,7 @@ from OpenGL.GLU import *
 from utils import (draw_box, draw_cylinder,
                    mat_wall, mat_wood, mat_glass, mat_fabric,
                    set_material, mat_metal)
-import math, time
+import math, time, random
 
 # ═══════════════════════════════════════════════════════
 #  HELPERS WARNA
@@ -334,48 +334,181 @@ def draw_window(hour=12.0):
 
 
 # ═══════════════════════════════════════════════════════
-#  SINAR MATAHARI (sun rays) — digambar TERAKHIR
+#  SINAR CAHAYA JENDELA — aktif setiap waktu
+#  Siang: sinar matahari kuning-oranye
+#  Senja/fajar: oranye kemerahan
+#  Malam: sinar bulan biru-putih
 # ═══════════════════════════════════════════════════════
 def draw_sun_rays(hour=12.0):
-    if   hour < 6.0:  ray_int = 0.0
-    elif hour < 8.0:  ray_int = smooth_step(6.0, 8.0, hour) * 0.06
-    elif hour < 11.0: ray_int = 0.06 + smooth_step(8.0, 11.0, hour) * 0.04
-    elif hour < 15.0: ray_int = 0.10
-    elif hour < 17.5: ray_int = 0.10 - smooth_step(15.0, 17.5, hour) * 0.04
-    elif hour < 19.0: ray_int = 0.06 - smooth_step(17.5, 19.0, hour) * 0.06
-    else:             ray_int = 0.0
-    if ray_int < 0.001: return
+    """Tetap dipanggil dari main.py — diteruskan ke draw_window_rays."""
+    draw_window_rays(hour)
 
-    if hour < 9.0:    rc = (1.0, 0.72, 0.38)
-    elif hour < 15.0: rc = (1.0, 0.93, 0.64)
-    else:             rc = (1.0, 0.78, 0.42)
+def draw_moon_rays(hour=0.0, lamp_on=False):
+    """Kompatibilitas — tidak lagi dipakai langsung."""
+    pass
 
+def draw_window_rays(hour=12.0):
+    """
+    Sinar cahaya dari jendela, aktif setiap jam.
+    Warna & intensitas berubah sesuai waktu:
+      - Dini hari (00-05): bulan redup, biru-putih
+      - Fajar      (05-07): oranye hangat meningkat
+      - Siang      (07-17): matahari kuning, paling terang jam 10-15
+      - Senja      (17-20): oranye-merah, meredup
+      - Malam      (20-24): bulan, biru-putih
+    """
     t = time.time()
-    flicker = ray_int + math.sin(t * 0.5) * ray_int * 0.12
+
+    # ── Warna sinar berdasarkan jam ──────────────────
+    if   hour < 5.0:
+        rc      = (0.60, 0.72, 1.00)   # bulan — biru pucat
+        ray_int = 0.06 + smooth_step(0.0, 5.0, hour) * 0.02
+        flicker_spd = 0.25
+    elif hour < 7.0:
+        # Fajar: bulan → matahari pagi
+        t_dawn  = smooth_step(5.0, 7.0, hour)
+        rc      = lerp3((0.60, 0.72, 1.00), (1.0, 0.65, 0.28), t_dawn)
+        ray_int = lerp(0.08, 0.09, t_dawn)
+        flicker_spd = 0.40
+    elif hour < 9.0:
+        rc      = (1.0, 0.72, 0.38)    # pagi — oranye
+        ray_int = 0.09 + smooth_step(7.0, 9.0, hour) * 0.03
+        flicker_spd = 0.50
+    elif hour < 15.0:
+        rc      = (1.0, 0.93, 0.64)    # siang — kuning
+        ray_int = 0.12
+        flicker_spd = 0.50
+    elif hour < 17.5:
+        t_aft   = smooth_step(15.0, 17.5, hour)
+        rc      = lerp3((1.0, 0.93, 0.64), (1.0, 0.60, 0.25), t_aft)
+        ray_int = lerp(0.12, 0.08, t_aft)
+        flicker_spd = 0.45
+    elif hour < 20.0:
+        # Senja → malam
+        t_dusk  = smooth_step(17.5, 20.0, hour)
+        rc      = lerp3((1.0, 0.60, 0.25), (0.60, 0.72, 1.00), t_dusk)
+        ray_int = lerp(0.08, 0.06, t_dusk)
+        flicker_spd = 0.30
+    else:
+        rc      = (0.60, 0.72, 1.00)   # bulan — biru pucat
+        ray_int = 0.06 + smooth_step(20.0, 23.0, hour) * 0.02
+        flicker_spd = 0.25
+
+    flicker = ray_int + math.sin(t * flicker_spd) * ray_int * 0.10
+
+    # ── Posisi sinar (5 berkas dari atas jendela) ───
+    rays = [
+        # (xl_atas, xr_atas,  xl_bawah, xr_bawah, alpha_factor)
+        (-1.00, -0.35,  -1.80, -0.50,  0.75),
+        (-0.30,  0.25,  -0.55,  0.55,  1.00),
+        ( 0.30,  0.80,   0.20,  1.30,  1.00),
+        ( 0.85,  1.35,   1.00,  2.10,  0.80),
+        ( 1.35,  1.55,   1.80,  2.50,  0.55),
+    ]
 
     glDisable(GL_LIGHTING)
     glEnable(GL_BLEND)
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
     glDepthMask(GL_FALSE)
 
-    rays = [
-        (-1.15,-0.40,-1.40,-0.30, 0.90),
-        (-0.38, 0.20,-0.60, 0.60, 1.00),
-        ( 0.22, 0.70, 0.20, 1.40, 1.00),
-        ( 0.72, 1.20, 1.00, 2.20, 0.90),
-        ( 1.22, 1.60, 1.80, 2.80, 0.70),
-    ]
     for (xl, xr, xl2, xr2, af) in rays:
         alpha = flicker * af
         glBegin(GL_QUADS)
         glColor4f(rc[0], rc[1], rc[2], alpha)
-        glVertex3f(xl,  2.90, -2.88)
-        glVertex3f(xr,  2.90, -2.88)
+        glVertex3f(xl,  3.10, -2.87)
+        glVertex3f(xr,  3.10, -2.87)
         glColor4f(rc[0], rc[1], rc[2], 0.0)
-        glVertex3f(xr2, 0.04,  2.8)
-        glVertex3f(xl2, 0.04,  2.8)
+        glVertex3f(xr2, 0.04,  2.60)
+        glVertex3f(xl2, 0.04,  2.60)
         glEnd()
 
+    glDepthMask(GL_TRUE)
+    glDisable(GL_BLEND)
+    glEnable(GL_LIGHTING)
+
+
+# ═══════════════════════════════════════════════════════
+#  PARTIKEL DEBU — muncul selama lampu ruangan MATI
+#  Warna partikel menyesuaikan warna sinar saat itu
+# ═══════════════════════════════════════════════════════
+
+_rng = random.Random(42)
+_NUM_PARTICLES = 140
+_particles = [
+    (
+        _rng.uniform(-1.20, 1.60),        # x
+        _rng.uniform( 0.10, 3.10),        # y
+        _rng.uniform(-2.80, 1.80),        # z
+        _rng.uniform( 0.0,  2*math.pi),   # phase
+        _rng.uniform( 0.10, 0.30),        # kecepatan naik-turun
+        _rng.uniform( 0.05, 0.16),        # kecepatan geser X
+        _rng.uniform( 0.40, 1.00),        # alpha base
+    )
+    for _ in range(_NUM_PARTICLES)
+]
+
+
+def draw_dust_particles(hour=0.0, lamp_on=False):
+    """
+    Partikel debu melayang — aktif selama lampu mati.
+    Warna mengikuti warna sinar jendela saat itu.
+    """
+    if lamp_on:
+        return
+
+    # Alpha dasar: lebih terlihat saat gelap, tetap ada saat siang
+    if   hour < 5.0:   base_alpha = 0.50
+    elif hour < 7.0:   base_alpha = lerp(0.50, 0.35, smooth_step(5.0, 7.0, hour))
+    elif hour < 15.0:  base_alpha = 0.35
+    elif hour < 19.0:  base_alpha = lerp(0.35, 0.48, smooth_step(15.0, 19.0, hour))
+    else:              base_alpha = 0.50
+
+    # Warna partikel mengikuti warna sinar (sama dengan draw_window_rays)
+    if   hour < 5.0:   pc = (0.78, 0.88, 1.00)
+    elif hour < 7.0:
+        tc = smooth_step(5.0, 7.0, hour)
+        pc = lerp3((0.78, 0.88, 1.00), (1.0, 0.82, 0.60), tc)
+    elif hour < 9.0:   pc = (1.0, 0.82, 0.60)
+    elif hour < 15.0:  pc = (1.0, 0.95, 0.78)
+    elif hour < 17.5:
+        tc = smooth_step(15.0, 17.5, hour)
+        pc = lerp3((1.0, 0.95, 0.78), (1.0, 0.75, 0.50), tc)
+    elif hour < 20.0:
+        tc = smooth_step(17.5, 20.0, hour)
+        pc = lerp3((1.0, 0.75, 0.50), (0.78, 0.88, 1.00), tc)
+    else:              pc = (0.78, 0.88, 1.00)
+
+    t = time.time()
+
+    glDisable(GL_LIGHTING)
+    glEnable(GL_BLEND)
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+    glDepthMask(GL_FALSE)
+    glDisable(GL_DEPTH_TEST)
+
+    glPointSize(2.5)
+    glBegin(GL_POINTS)
+
+    for (px, py, pz, phase, spd_y, spd_x, a_base) in _particles:
+        dy = math.sin(t * spd_y + phase) * 0.20
+        dx = math.sin(t * spd_x + phase * 1.3) * 0.12
+
+        wx = px + dx
+        wy = py + dy
+        wz = pz
+
+        in_beam = (-1.30 < wx < 1.70) and (0.04 < wy < 3.20) and (-2.90 < wz < 2.60)
+        if not in_beam:
+            continue
+
+        dist_center = abs(wx - 0.30) / 1.40
+        alpha = base_alpha * a_base * max(0.0, 1.0 - dist_center)
+
+        glColor4f(pc[0], pc[1], pc[2], alpha)
+        glVertex3f(wx, wy, wz)
+
+    glEnd()
+    glEnable(GL_DEPTH_TEST)
     glDepthMask(GL_TRUE)
     glDisable(GL_BLEND)
     glEnable(GL_LIGHTING)
