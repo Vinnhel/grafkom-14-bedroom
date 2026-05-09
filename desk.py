@@ -111,18 +111,18 @@ def _draw_laptop(lx, ly, lz):
     glRotatef(-10, 1, 0, 0)              # layar tegak ke atas, sedikit miring ke belakang (~10°) seperti laptop nyata
     # Sekarang gambar layar: bawah layar di hinge (y=0), layar tegak ke atas
     mat_plastic(0.18, 0.18, 0.22)
-    draw_box(0, 0.215, 0, 0.70, 0.43, 0.018, 0.18, 0.18, 0.22)
+    draw_box(0, 0, 0, 0.70, 0.43, 0.018, 0.18, 0.18, 0.22)
     # Layar (screen panel)
     set_material(0.08, 0.12, 0.22, amb_scale=0.12,
                  spec=(0.60,0.62,0.68,1.0), shininess=72.0)
-    draw_box(0, 0.215, 0.001, 0.62, 0.37, 0.008, 0.08, 0.12, 0.22)
+    draw_box(0, 0.03, 0.001, 0.62, 0.37, 0.008, 0.08, 0.12, 0.22)
     # Konten layar (biru/UI)
     set_material(0.20, 0.40, 0.80, amb_scale=0.20,
                  spec=(0.50,0.55,0.65,1.0), shininess=60.0)
-    draw_box(0, 0.215, 0.002, 0.40, 0.20, 0.005, 0.20, 0.40, 0.80)
+    draw_box(0, 0.06, 0.002, 0.40, 0.20, 0.005, 0.20, 0.40, 0.80)
     # Logo
     mat_metal(0.65, 0.65, 0.68)
-    draw_box(0, 0.215, -0.010, 0.10, 0.10, 0.004, 0.65, 0.65, 0.68)
+    draw_box(0, 0.18, -0.010, 0.10, 0.10, 0.004, 0.65, 0.65, 0.68)
     glPopMatrix()
 
 
